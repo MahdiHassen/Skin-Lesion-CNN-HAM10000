@@ -7,7 +7,7 @@ https://www.kaggle.com/kmader/skin-cancer-mnist-ham10000
 """
 
 import os
-#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force TensorFlow to use CPU
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force TensorFlow to use CPU
 
 import numpy as np
 import pandas as pd
