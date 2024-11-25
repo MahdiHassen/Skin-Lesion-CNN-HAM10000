@@ -2,7 +2,6 @@ import tensorflow as tf
 from PIL import Image, ImageTk
 import numpy as np
 import tkinter as tk
-from tkinterdnd2 import DND_FILES, TkinterDnD
 from tkinter import filedialog
 import os
 
@@ -34,16 +33,17 @@ def predict_image(image_path):
 
 # Function to handle the file selection dialog
 def select_file():
-    file_path = filedialog.askopenfilename(
-        filetypes=[
-            ("Image Files", "*.jpg *.jpeg *.png"),  # Supported image formats
-            ("JPEG Files", "*.jpg;*.jpeg"),
-            ("PNG Files", "*.png"),
-            ("All Files", "*.*")  # Option to show all files
-        ]
-    )
-    if file_path:
-        display_prediction(file_path)
+    try:
+        # Minimal filetypes argument to avoid macOS issues
+        file_path = filedialog.askopenfilename(
+            filetypes=[("All Files", "*.*")]
+        )
+        if file_path:
+            display_prediction(file_path)
+        else:
+            print("No file selected.")
+    except Exception as e:
+        print(f"Error selecting file: {e}")
 
 # Function to display prediction and show image
 def display_prediction(image_path):
@@ -58,29 +58,10 @@ def display_prediction(image_path):
     image_label.config(image=img_tk)
     image_label.image = img_tk  # Keep a reference to avoid garbage collection
 
-# Function to handle drag-and-drop files
-def drop(event):
-    file_path = event.data
-    if os.path.isfile(file_path):
-        display_prediction(file_path)
-
 # Create the GUI
-root = TkinterDnD.Tk()
+root = tk.Tk()
 root.title("Skin Cancer Classification")
 root.geometry("500x700")
-
-# Frame for drag-and-drop
-frame = tk.Frame(root, width=400, height=200, bg="lightgray", relief="ridge", borderwidth=2)
-frame.pack(pady=20)
-frame.pack_propagate(False)
-
-# Label for drag-and-drop instructions
-drag_label = tk.Label(frame, text="Drag and drop an image file here", bg="lightgray", font=("Helvetica", 14))
-drag_label.pack(expand=True)
-
-# Bind drag-and-drop event
-frame.drop_target_register(DND_FILES)
-frame.dnd_bind('<<Drop>>', drop)
 
 # Button to select a file manually
 select_button = tk.Button(root, text="Select File", command=select_file, font=("Helvetica", 14))
