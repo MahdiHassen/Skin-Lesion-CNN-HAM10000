@@ -41,8 +41,8 @@ le = LabelEncoder()
 le.fit(skin_df["dx"])
 skin_df["label"] = le.transform(skin_df["dx"])
 
-print("Classes:", list(le.classes_))
-print(skin_df.sample(10))
+print("Classes:", list(le.classes_)) #print out classes from numerical list.
+print(skin_df.sample(10)) #printing out 10 random samples
 
 # ---------------------------------
 # Step 2: Balance Dataset
@@ -52,6 +52,8 @@ balanced_dfs = []
 for label in skin_df["label"].unique():
     df_label = skin_df[skin_df["label"] == label]
     balanced_dfs.append(resample(df_label, replace=True, n_samples=n_samples, random_state=42))
+
+
 
 skin_df_balanced = pd.concat(balanced_dfs)
 
