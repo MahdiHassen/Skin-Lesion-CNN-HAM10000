@@ -47,7 +47,7 @@ print(skin_df.sample(10)) #printing out 10 random samples
 # ---------------------------------
 # Step 2: Balance Dataset
 # ---------------------------------
-n_samples = 500
+n_samples = 1200
 balanced_dfs = []
 for label in skin_df["label"].unique():
     df_label = skin_df[skin_df["label"] == label]
@@ -95,7 +95,7 @@ model.summary()
 # ---------------------------------
 # Step 5: Train the Model
 # ---------------------------------
-history = model.fit(x_train, y_train, validation_split=0.2, epochs=30, batch_size=32)
+history = model.fit(x_train, y_train, validation_split=0.2, epochs=25, batch_size=32)
 
 # ---------------------------------
 # Step 6: Evaluate the Model

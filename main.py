@@ -14,12 +14,6 @@ print("Model loaded successfully!")
 
 # Class names
 class_names = ['akiec', 'bcc', 'bkl', 'df', 'mel', 'nv', 'vasc']
-# Melanocytic nevi (nv)
-# Melanoma (mel)
-# Benign keratosis-like lesions (bkl)
-# Actinic keratoses (akiec)
-# Vascular lesions (vas)
-# Dermatofibroma (df)
 
 # Function to preprocess the image
 def preprocess_image(image_path):

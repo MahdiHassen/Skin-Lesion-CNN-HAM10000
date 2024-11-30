@@ -18,12 +18,15 @@ import csv
 data_dir = "data/reorganized/"
 csv = 'data/HAM10000_metadata.csv'
 testcsv ='data/test_metadata.csv'
+actualcsv ='data/HAM10000_metadata.csv'
 
 
 image_path ='data/test'
 #trying to simulate working with the actual directories and csv files
-input_folder = 'data/reorganized/df'
-output_folder = 'data/reorganized/df/output'
+#currently fixed to df, but we can either manyally change this for the other underpressented image directories, or make a lil method.
+input_folder = 'data/reorganized/bcc'
+output_folder = 'data/reorganized/bcc/output'
+#WARNING: I TRIED THIS WITH THE SMALLER LABELS N IT TANKEDDD THE TEST ACCURACY. 
 
 def PlotData(csvdir):
     skin_df = pd.read_csv(csvdir)
@@ -69,6 +72,21 @@ def rotate_image(image):
     rotated_image = cv2.warpAffine(image, rotation_matrix, (w, h))
     return rotated_image
 
+def zoom_image(image): # 0: x-axis, 1: y- axis, -1: both, added 2 as none
+    value = rand.uniform(1.1, 1.25)
+    h, w = image.shape[:2]
+    # Resize the image
+    new_h = int(h * value)
+    new_w = int(w * value)
+    resized_image = cv2.resize(image, (new_w, new_h))
+
+    # Calculate crop region to get the central part
+    start_x = (new_w - w) // 2
+    start_y = (new_h - h) // 2
+    cropped_image = resized_image[start_y:start_y + h, start_x:start_x + w]
+
+    return cropped_image
+
 def flip_image(image): # 0: x-axis, 1: y- axis, -1: both, added 2 as none
     value = rand.randint(-1, 2)
     print(f"value: {value}")
@@ -79,7 +97,6 @@ def flip_image(image): # 0: x-axis, 1: y- axis, -1: both, added 2 as none
         # If value is 2, keep the image unchanged
         flipped_image = image
     return flipped_image
-
 
 
 def writemetadata(file_path, target_image_id, new_image_id):
@@ -133,18 +150,18 @@ def process_images(input_folder, output_folder):
             image = cv2.imread(image_path)
             if image is not None:
                 for i in range(1): #leftover for when u wanna make multiple copies from 1 image
-                    rotated_image = rotate_image(image)
-                    flipped_image = flip_image(rotated_image)
+                    #rotated_image = rotate_image(image)
+                    flipped_image = flip_image(image)
+                    zoomed_image = zoom_image(flipped_image)
 
                     # Save the flipped image
                     newfilename = f"{basename}_{i+1}.jpg"
                     output_path = os.path.join(output_folder, newfilename)
-                    cv2.imwrite(output_path, flipped_image)
+                    cv2.imwrite(output_path, zoomed_image)
                     print(f"Processed and saved: {output_path}")
                     #now gotta update csv file with new image_id and dx
                     #look at metadata to copy data from the basename (image_id)
-                    writemetadata(testcsv, basename, newfilename)
-
+                    writemetadata(actualcsv, basename, newfilename)
                 print("done.")
             else:
                 print(f"Failed to load image: {image_path}")
@@ -152,46 +169,6 @@ def process_images(input_folder, output_folder):
             print(f"Skipped non-image file: {newfilename}")
 
 
-
-def ResampleData():
-    data_dir = "data/reorganized/"
-
-    # Create a DataFrame with image paths and labels
-    skin_df = pd.DataFrame(columns=["image_id", "dx", "path"])
-    for label in os.listdir(data_dir):
-        for img_path in glob(os.path.join(data_dir, label, "*.jpg")):
-            skin_df = pd.concat(
-                [skin_df, pd.DataFrame({"image_id": [os.path.basename(img_path).split('.')[0]], 
-                                        "dx": [label], 
-                                        "path": [img_path]})],
-                ignore_index=True,
-            )
-
-    # Encode labels into numeric values
-    le = LabelEncoder()
-    le.fit(skin_df["dx"])
-    skin_df["label"] = le.transform(skin_df["dx"])
-
-    print("Classes:", list(le.classes_)) #print out classes from numerical list.
-    #print(skin_df.sample(10)) #printing out 10 random samples
-    SIZE = 32
-    n_samples = 500
-    balanced_dfs = []
-    for label in skin_df["label"].unique():
-        df_label = skin_df[skin_df["label"] == label]
-        balanced_dfs.append(resample(df_label, replace=True, n_samples=n_samples, random_state=42))
-
-    skin_df_balanced = pd.concat(balanced_dfs)
-
-    # Load and preprocess images
-    skin_df_balanced["image"] = skin_df_balanced["path"].map(
-        lambda x: np.asarray(Image.open(x).resize((SIZE, SIZE)))
-    )
-
-    print(skin_df_balanced['label'].value_counts())
-
-    # Normalize pixel values to [0, 1]
-    print("done")
 
 #PlotData(csv)
 #ResampleData()
