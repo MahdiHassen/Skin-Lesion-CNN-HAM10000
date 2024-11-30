@@ -7,7 +7,7 @@ https://www.kaggle.com/kmader/skin-cancer-mnist-ham10000
 """
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force TensorFlow to use CPU
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force TensorFlow to use CPU.
 
 import numpy as np
 import pandas as pd
@@ -38,24 +38,22 @@ for label in os.listdir(data_dir):
 
 # Encode labels into numeric values
 le = LabelEncoder()
-le.fit(skin_df["dx"])
+le.fit(skin_df["dx"]) #so now akiec = 0, bcc = 1, etc...
 skin_df["label"] = le.transform(skin_df["dx"])
 
 print("Classes:", list(le.classes_)) #print out classes from numerical list.
-print(skin_df.sample(10)) #printing out 10 random samples
+print(skin_df.sample(10)) #even with augmentation, nv is more than the others 6 to 1, so ull mostly see that here.
 
 # ---------------------------------
 # Step 2: Balance Dataset
 # ---------------------------------
-n_samples = 1200
+n_samples = 1200 #With augmentation, each labal now has around 1000 'unique' images. upsampling will just repeat sample images. 
 balanced_dfs = []
-for label in skin_df["label"].unique():
+for label in skin_df["label"].unique(): #iterate thru each label to sample only the amount u need
     df_label = skin_df[skin_df["label"] == label]
     balanced_dfs.append(resample(df_label, replace=True, n_samples=n_samples, random_state=42))
 
-
-
-skin_df_balanced = pd.concat(balanced_dfs)
+skin_df_balanced = pd.concat(balanced_dfs) #add em all into 1 balanced df
 
 # Load and preprocess images
 skin_df_balanced["image"] = skin_df_balanced["path"].map(
@@ -65,7 +63,7 @@ skin_df_balanced["image"] = skin_df_balanced["path"].map(
 # Normalize pixel values to [0, 1]
 X = np.asarray(skin_df_balanced["image"].tolist()) / 255.0
 Y = skin_df_balanced["label"].values  # Numeric labels
-Y_cat = tf.one_hot(Y, depth=7)  # One-hot encoding for labels
+Y_cat = tf.one_hot(Y, depth=7)  # One-hot encoding for labels. so its either a label or its not.
 
 # ---------------------------------
 # Step 3: Split Data into Train/Test Sets
@@ -75,6 +73,11 @@ x_train, x_test, y_train, y_test = train_test_split(X, Y_cat.numpy(), test_size=
 # ---------------------------------
 # Step 4: Build the CNN Model
 # ---------------------------------
+#LECTURE 8
+#chose sequential cuz simplest and also 1 input, 1 output. Autokeras recommended - thank you ak!
+#2D convo layer 32/64/128 filters, 3x3 conv window: feature extraction
+#max Pooling 2D: downsamples input w maxing, more efficient.
+#bread and butter is fully connected / dense layer: classification
 model = tf.keras.Sequential([
     tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(SIZE, SIZE, 3)),
     tf.keras.layers.MaxPooling2D((2, 2)),
