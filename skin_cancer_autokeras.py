@@ -7,7 +7,7 @@ https://www.kaggle.com/kmader/skin-cancer-mnist-ham10000
 """
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Force TensorFlow to use CPU.
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  #force TensorFlow to use CPU.
 
 import numpy as np
 import pandas as pd
@@ -19,13 +19,11 @@ from sklearn.utils import resample
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
 
-# ---------------------------------
-# Step 1: Load Dataset Information
-# ---------------------------------
+#load dataset
 SIZE = 32
 data_dir = "data/reorganized/"
 
-# Create a DataFrame with image paths and labels
+#create a DataFrame with image paths and labels
 skin_df = pd.DataFrame(columns=["image_id", "dx", "path"])
 for label in os.listdir(data_dir):
     for img_path in glob(os.path.join(data_dir, label, "*.jpg")):
@@ -36,7 +34,7 @@ for label in os.listdir(data_dir):
             ignore_index=True,
         )
 
-# Encode labels into numeric values
+#encode labels into numeric values
 le = LabelEncoder()
 le.fit(skin_df["dx"]) #so now akiec = 0, bcc = 1, etc...
 skin_df["label"] = le.transform(skin_df["dx"])
@@ -44,35 +42,29 @@ skin_df["label"] = le.transform(skin_df["dx"])
 print("Classes:", list(le.classes_)) #print out classes from numerical list.
 print(skin_df.sample(10)) #even with augmentation, nv is more than the others 6 to 1, so ull mostly see that here.
 
-# ---------------------------------
-# Step 2: Balance Dataset
-# ---------------------------------
+#balance dataset
 n_samples = 1200 #With augmentation, each labal now has around 1000 'unique' images. upsampling will just repeat sample images. 
 balanced_dfs = []
 for label in skin_df["label"].unique(): #iterate thru each label to sample only the amount u need
     df_label = skin_df[skin_df["label"] == label]
     balanced_dfs.append(resample(df_label, replace=True, n_samples=n_samples, random_state=42))
 
-skin_df_balanced = pd.concat(balanced_dfs) #add em all into 1 balanced df
+skin_df_balanced = pd.concat(balanced_dfs) #add them all into 1 balanced df
 
-# Load and preprocess images
+#load and preprocess images
 skin_df_balanced["image"] = skin_df_balanced["path"].map(
     lambda x: np.asarray(Image.open(x).resize((SIZE, SIZE)))
 )
 
-# Normalize pixel values to [0, 1]
+#normalize pixel values to [0, 1]
 X = np.asarray(skin_df_balanced["image"].tolist()) / 255.0
 Y = skin_df_balanced["label"].values  # Numeric labels
 Y_cat = tf.one_hot(Y, depth=7)  # One-hot encoding for labels. so its either a label or its not.
 
-# ---------------------------------
-# Step 3: Split Data into Train/Test Sets
-# ---------------------------------
+#split data into train/test sets
 x_train, x_test, y_train, y_test = train_test_split(X, Y_cat.numpy(), test_size=0.2, random_state=42)
 
-# ---------------------------------
-# Step 4: Build the CNN Model
-# ---------------------------------
+#build CNN model
 #LECTURE 8
 #chose sequential cuz simplest and also 1 input, 1 output. Autokeras recommended - thank you ak!
 #2D convo layer 32/64/128 filters, 3x3 conv window: feature extraction
@@ -95,26 +87,18 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 
 model.summary()
 
-# ---------------------------------
-# Step 5: Train the Model
-# ---------------------------------
+#train model
 history = model.fit(x_train, y_train, validation_split=0.2, epochs=25, batch_size=32)
 
-# ---------------------------------
-# Step 6: Evaluate the Model
-# ---------------------------------
+#evaluate model
 test_loss, test_acc = model.evaluate(x_test, y_test)
 print(f"Test Accuracy: {test_acc * 100:.2f}%")
 
-# ---------------------------------
-# Step 7: Save the Model
-# ---------------------------------
+#save model
 model.save("skin_cancer_model_tf.h5")
 print("Model saved as 'skin_cancer_model_tf.h5'")
 
-# ---------------------------------
-# Step 8: Visualize Training Results
-# ---------------------------------
+#generate figures
 plt.plot(history.history['accuracy'], label='Train Accuracy')
 plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
 plt.xlabel('Epochs')
@@ -129,7 +113,7 @@ plt.ylabel('Loss')
 plt.legend()
 plt.show()
 
-# Save accuracy plot
+#save accuracy plot
 plt.plot(history.history['accuracy'], label='Train Accuracy')
 plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
 plt.xlabel('Epochs')
@@ -138,7 +122,7 @@ plt.legend()
 plt.savefig("accuracy_plot.png")
 plt.close()
 
-# Save loss plot
+#save loss plot
 plt.plot(history.history['loss'], label='Train Loss')
 plt.plot(history.history['val_loss'], label='Validation Loss')
 plt.xlabel('Epochs')
